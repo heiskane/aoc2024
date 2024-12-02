@@ -43,18 +43,18 @@ IO.puts(result)
 
 {:ok, input2} = File.read("input_2b.txt")
 
-[left, right] = input2
+result = input2
 |> String.split("\n", trim: true)
 |> Enum.reduce([[], []], fn x, acc ->
   [a1, a2] = x |> String.split("   ")
   [acc1, acc2] = acc
   [[String.to_integer(a1) | acc1], [String.to_integer(a2) | acc2]]
 end)
-
-result = left
-|> Enum.map(fn x -> 
-  Enum.count(right, fn item -> item == x end) * x
-end)
+|> (fn [a, b] ->
+  Enum.map(a, fn x ->
+    Enum.count(b, fn item -> item == x end) * x
+  end)
+end).()
 |> Enum.sum()
 
 IO.puts(result)
