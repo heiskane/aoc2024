@@ -2,8 +2,6 @@
 
 defmodule Solver do
   def solve(items) do
-    # TODO: instead of all this try checking that diffs between each elem is < 0 or > 0
-    # and ranges within range
     direction = cond do
       hd(items) === hd(tl(items)) -> nil
       hd(items) > hd(tl(items)) -> :down
@@ -33,12 +31,21 @@ defmodule Solver do
   end
 
   def solve2(items) do
-    if Solver.solve(items) do
+    # Idea yoinked from: https://github.com/nitekat1124/advent-of-code-2024/blob/main/solutions/day02.py
+    diffs = Enum.zip_reduce([items, tl items], [], fn [a, b], acc ->
+      [ a - b | acc ]
+    end)
+    (Enum.all?(diffs, fn x -> x > 0 end) || Enum.all?(diffs, fn x -> x < 0 end)) &&
+      Enum.all?(diffs, fn x -> 1 <= abs(x) && abs(x) <= 3 end)
+  end
+
+  def solve_part2(items) do
+    if Solver.solve2(items) do
       true
     else
       Enum.with_index(items)
       |> Enum.map(fn {_, index} ->
-        Solver.solve(List.delete_at(items, index))
+        Solver.solve2(List.delete_at(items, index))
       end)
       |> Enum.any?()
     end
@@ -50,7 +57,7 @@ input1
 |> Enum.map(fn x ->
   x |> String.split(" ")
     |> Enum.map(fn x -> String.to_integer(x) end)
-    |> Solver.solve()
+    |> Solver.solve2()
 end)
 |> Enum.count(fn item -> item === true end)
 |> IO.puts()
@@ -62,7 +69,7 @@ input2
 |> Enum.map(fn x ->
   x |> String.split(" ")
     |> Enum.map(fn x -> String.to_integer(x) end)
-    |> Solver.solve2()
+    |> Solver.solve_part2()
 end)
 |> Enum.count(fn item -> item === true end)
 |> IO.puts()
