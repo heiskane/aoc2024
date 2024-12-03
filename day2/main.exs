@@ -50,16 +50,16 @@ defmodule Solver do
       |> Enum.any?()
     end
   end
-
 end
+
 input1
 |> String.split("\n", trim: true)
 |> Enum.map(fn x ->
   x |> String.split(" ")
-    |> Enum.map(fn x -> String.to_integer(x) end)
+    |> Enum.map(&String.to_integer(&1))
     |> Solver.solve2()
 end)
-|> Enum.count(fn item -> item === true end)
+|> Enum.count(&(&1 === true))
 |> IO.puts()
 
 {:ok, input2} = File.read("input_2b.txt")
@@ -68,8 +68,8 @@ input2
 |> String.split("\n", trim: true)
 |> Enum.map(fn x ->
   x |> String.split(" ")
-    |> Enum.map(fn x -> String.to_integer(x) end)
+    |> Enum.map(&String.to_integer(&1))
     |> Solver.solve_part2()
 end)
-|> Enum.count(fn item -> item === true end)
+|> Enum.count(&(&1 === true))
 |> IO.puts()
