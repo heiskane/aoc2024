@@ -14,7 +14,7 @@ defmodule Solver do
   def consume_string(string, enabled = true) do
     rest = String.slice(string, 1..-1//1)
     cond do
-      String.starts_with?(string, "mul") ->
+      String.starts_with?(string, "mul(") ->
         case Regex.run(~r/^mul\((\d+),(\d+)\)/, string) do
           [_, a, b] -> consume_string(rest, enabled) + String.to_integer(a) * String.to_integer(b)
           nil -> consume_string(rest, enabled)
