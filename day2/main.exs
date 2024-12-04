@@ -1,4 +1,4 @@
-{:ok, input1} = File.read("input_1b.txt")
+{:ok, input} = File.read("input_1b.txt")
 
 defmodule Solver do
   def solve(items) do
@@ -52,7 +52,7 @@ defmodule Solver do
   end
 end
 
-input1
+input
 |> String.split("\n", trim: true)
 |> Enum.map(fn x ->
   x |> String.split(" ")
@@ -62,9 +62,7 @@ end)
 |> Enum.count(&(&1 === true))
 |> IO.puts()
 
-{:ok, input2} = File.read("input_2b.txt")
-
-input2
+input
 |> String.split("\n", trim: true)
 |> Enum.map(fn x ->
   x |> String.split(" ")

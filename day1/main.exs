@@ -1,30 +1,6 @@
-{:ok, input1} = File.read("input_1b.txt")
+{:ok, input} = File.read("input_1b.txt")
 
-# input
-# |> String.split("\n", trim: true)
-# |> Enum.map(fn (x) -> x |> String.split("   ") end)
-# |> Enum.map(&IO.puts/1)
-
-# list1 = []
-# list2 = []
-#
-# asdf = input
-# |> String.split("\n", trim: true)
-# |> Enum.map(fn (x) ->
-#     # IO.inspect(x)
-#   [a1, a2] = x |>
-#   String.split("   ")
-#   # IO.puts([a1 | []])
-#   # IO.puts(a2)
-#   list1 = [a1 | list1]
-#   list2 = [a2 | list2]
-# end)
-
-# IO.inspect(list1)
-# IO.inspect(list2)
-# IO.inspect(asdf)
-
-result = input1
+input
 |> String.split("\n", trim: true)
 |> Enum.reduce([[], []], fn x, acc ->
   [a1, a2] = x |> String.split("   ")
@@ -38,12 +14,9 @@ end)
 |> Enum.zip_reduce(0, fn [x, y], acc ->
   acc + abs(x - y)
 end)
+|> IO.puts()
 
-IO.puts(result)
-
-{:ok, input2} = File.read("input_2b.txt")
-
-result = input2
+input
 |> String.split("\n", trim: true)
 |> Enum.reduce([[], []], fn x, acc ->
   [a1, a2] = x |> String.split("   ")
@@ -56,5 +29,4 @@ end)
   end)
 end).()
 |> Enum.sum()
-
-IO.puts(result)
+|> IO.puts()
