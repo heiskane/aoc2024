@@ -1,18 +1,25 @@
 defmodule Solver do
   def consume_string(string, enabled \\ true)
-  def consume_string(string, enabled) when string === "" do 0 end
-  def consume_string(string, enabled) do
-    {char, rest} = String.next_codepoint(string)
-    cond do
-      enabled && String.starts_with?(string, "mul") ->
-        case Regex.run(~r/^mul\((\d+),(\d+)\)/, string) do
-          [match, a, b] -> consume_string(rest, enabled) + String.to_integer(a) * String.to_integer(b)
-          nil -> consume_string(rest, enabled)
-        end
+  def consume_string(string, _enabled) when string === "" do 0 end
 
+  def consume_string(string, enabled = false) do
+    rest = String.slice(string, 1..-1//1)
+    cond do
       !enabled && String.starts_with?(string, "do()") ->
         consume_string(rest, true)
-      enabled && String.starts_with?(string, "don't()") ->
+      true -> consume_string(rest, enabled)
+    end
+  end
+
+  def consume_string(string, enabled = true) do
+    rest = String.slice(string, 1..-1//1)
+    cond do
+      String.starts_with?(string, "mul") ->
+        case Regex.run(~r/^mul\((\d+),(\d+)\)/, string) do
+          [_, a, b] -> consume_string(rest, enabled) + String.to_integer(a) * String.to_integer(b)
+          nil -> consume_string(rest, enabled)
+        end
+      String.starts_with?(string, "don't()") ->
         consume_string(rest, false)
       true -> consume_string(rest, enabled)
     end
