@@ -79,26 +79,29 @@ grid = String.split(input1, "\n", trim: true)
 
 start = Solver.find_guard(grid)
 
-Solver.trace_path(grid, start)
-|> tap(&(Solver.puts_grid(&1)))
-|> Enum.reduce(0, fn row, acc ->
-  acc + Enum.count(row, &(&1 === "X"))
-end)
-|> IO.puts()
+# Solver.trace_path(grid, start)
+# |> tap(&(Solver.puts_grid(&1)))
+# |> Enum.reduce(0, fn row, acc ->
+#   acc + Enum.count(row, &(&1 === "X"))
+# end)
+# |> IO.puts()
 
 grid
 |> Solver.trace_path(start)
 |> Enum.with_index(fn row, i ->
-  Enum.with_index(row, fn char, j ->
-    # Only try blocking locations where guard patrols
-    if char === "X" && ! %{x: i, y: j} !== start do
-      List.update_at(grid, i, fn row ->
-        List.update_at(row, j, fn _ -> "O" end)
-      end)
-      |> Solver.is_infinite(start)
-    else false end
+  Task.async(fn ->
+    Enum.with_index(row, fn char, j ->
+      # Only try blocking locations where guard patrols
+      if char === "X" && ! %{x: i, y: j} !== start do
+        List.update_at(grid, i, fn row ->
+          List.update_at(row, j, fn _ -> "O" end)
+        end)
+        |> Solver.is_infinite(start)
+      else false end
+    end)
   end)
 end)
+|> Enum.map(&Task.await/1)
 |> Enum.reduce(0, fn row, acc ->
   acc + Enum.count(row, &(&1 === true))
 end)
