@@ -24,7 +24,7 @@ end
 
 [rules, updates] = input1
 |> String.split("\n\n")
-|> (fn [rules, updates] -> [String.split(rules), String.split(updates)] end).()
+|> Enum.map(&String.split(&1))
 
 updates
 |> Enum.map(&String.split(&1, ","))
