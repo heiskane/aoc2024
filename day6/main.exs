@@ -101,8 +101,9 @@ grid
     end)
   end)
 end)
-|> Enum.map(&Task.await/1)
 |> Enum.reduce(0, fn row, acc ->
-  acc + Enum.count(row, &(&1 === true))
+  Task.await(row)
+  |> Enum.count(&(&1 === true))
+  |> then(&(&1 + acc))
 end)
 |> IO.inspect()
