@@ -39,12 +39,7 @@ defmodule Solver do
 
   # mimic while loop. not sure what would be more "elixir" way of doing it
   def is_infinite(grid, guard, turns \\ [], direction \\ %{x: -1, y: 0}, run \\ true) do
-    # IO.inspect(guard)
     if run && !(guard.x < 0 || guard.y < 0) do
-      grid = List.update_at(grid, guard.x, fn row ->
-        List.update_at(row, guard.y, fn _ -> "X" end)
-      end)
-
       next = %{x: guard.x + direction.x, y: guard.y + direction.y}
 
       next_char = case Enum.at(grid, next.x) do
@@ -85,24 +80,22 @@ grid = String.split(input1, "\n", trim: true)
 start = Solver.find_guard(grid)
 
 # Solver.trace_path(grid, start)
+# |> tap(&(Solver.puts_grid(&1)))
 # |> Enum.reduce(0, fn row, acc ->
 #   acc + Enum.count(row, &(&1 === "X"))
 # end)
 # |> IO.puts()
 
 grid
+|> Solver.trace_path(start)
 |> Enum.with_index(fn row, i ->
-  # IO.puts(i)
   Enum.with_index(row, fn char, j ->
-    if char === "." do
-      to_test = List.update_at(grid, i, fn row ->
+    # Only try blocking locations where guard patrols
+    if char === "X" do
+      List.update_at(grid, i, fn row ->
         List.update_at(row, j, fn _ -> "O" end)
       end)
-      result = Solver.is_infinite(to_test, start)
-      if result do
-        # Solver.puts_grid(to_test)
-        true
-      end
+      |> Solver.is_infinite(start)
     else false end
   end)
 end)
