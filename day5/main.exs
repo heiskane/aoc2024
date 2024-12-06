@@ -20,6 +20,14 @@ defmodule Solver do
     |> String.to_integer()
   end
 
+  def sort_update(rules, update) do
+    Enum.sort(update, fn a, b ->
+      Enum.find(rules, &(String.contains?(&1, a) && String.contains?(&1, b)))
+      |> String.split("|")
+      |> then(&(&1 === [a, b]))
+    end)
+  end
+
 end
 
 [rules, updates] = input1
@@ -28,27 +36,15 @@ end
 
 updates
 |> Enum.map(&String.split(&1, ","))
-|> Enum.reduce(0, fn x, acc ->
-  case Solver.check_validity(rules, x) do
-    true -> Solver.get_mid(x) + acc
-    false -> acc
-  end
-end)
-|> IO.inspect()
+|> Enum.filter(&Solver.check_validity(rules, &1))
+|> Enum.map(&Solver.get_mid(&1))
+|> Enum.sum()
+|> IO.puts()
 
 updates
 |> Enum.map(&String.split(&1, ","))
-|> Enum.reduce(0, fn x, acc ->
-  case Solver.check_validity(rules, x) do
-    false ->
-      Enum.sort(x, fn a, b ->
-        [left, right] = Enum.find(rules, &(String.contains?(&1, a) && String.contains?(&1, b)))
-        |> String.split("|")
-        (a === left && b === right)
-      end)
-      |> Solver.get_mid()
-      |> Kernel.+(acc)
-    true -> acc
-  end
-end)
-|> IO.inspect()
+|> Enum.reject(&Solver.check_validity(rules, &1))
+|> Enum.map(&Solver.sort_update(rules, &1))
+|> Enum.map(&Solver.get_mid(&1))
+|> Enum.sum()
+|> IO.puts()
