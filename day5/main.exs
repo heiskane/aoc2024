@@ -15,8 +15,10 @@ defmodule Solver do
   end
 
   def get_mid(update) do
-    mid = Integer.floor_div(length(update), 2)
-    Enum.at(update, mid)
+    update
+    |> length()
+    |> then(&Integer.floor_div(&1, 2))
+    |> then(&Enum.at(update, &1))
     |> String.to_integer()
   end
 
