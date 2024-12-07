@@ -14,16 +14,14 @@ defmodule Combinations do
 end
 
 defmodule Solver do
-  def is_valid(row) do
+  def is_valid(row, funcs) do
     target = hd(row)
     values = tl(row)
-
-    operations = Combinations.generate_combinations(
-      [&Kernel.+/2, &Kernel.*/2], (length(values) - 1)
-    )
+    operations = Combinations.generate_combinations(funcs, (length(values) - 1))
 
     Enum.map(operations, fn ops ->
       Enum.with_index(tl(values))
+      # TODO: reduce until one valid combination is found
       |> Enum.reduce(hd(values), fn {value, i}, acc ->
         Enum.at(ops, i)  # get operator
         |> (& &1.(acc, value)).()  # this feels naughty
@@ -33,6 +31,7 @@ defmodule Solver do
   end
 end
 
+# part1
 input
 |> String.split("\n", trim: true)
 |> Enum.map(&String.split(&1, " "))
@@ -41,7 +40,24 @@ input
   Enum.map(row, &String.to_integer/1)
 end)
 |> Enum.map(fn row ->
-  case Solver.is_valid(row) do
+  case Solver.is_valid(row, [&Kernel.+/2, &Kernel.*/2]) do
+    true -> hd(row)
+    false -> 0
+  end
+end)
+|> Enum.sum()
+|> IO.inspect()
+
+# part2
+input
+|> String.split("\n", trim: true)
+|> Enum.map(&String.split(&1, " "))
+|> Enum.map(&([ String.trim(hd(&1), ":") | tl(&1) ]))
+|> Enum.map(fn row ->
+  Enum.map(row, &String.to_integer/1)
+end)
+|> Enum.map(fn row ->
+  case Solver.is_valid(row, [&Kernel.+/2, &Kernel.*/2, &(String.to_integer("#{&1}#{&2}"))]) do
     true -> hd(row)
     false -> 0
   end
