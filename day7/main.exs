@@ -9,15 +9,17 @@ defmodule Solver do
     end)
   end
 
-  def concat(x, y) do
-    :math.floor(:math.log10(y))
-    |> then(&(trunc(x * (10 ** (&1 + 1)) + y)))
-  end
-
   def is_valid(row, funcs) do
     target = hd(row)
     values = tl(row)
-    operations = Solver.generate_combinations(funcs, (length(values) - 1))
+
+    {time, operations} = :timer.tc(fn ->
+      # TODO: Optimize me away
+      Solver.generate_combinations(funcs, (length(values) - 1))
+    end)
+
+    time / 1000000
+    |> IO.puts()
 
     valid = Enum.reduce_while(operations, false, fn ops, found ->
       result = Enum.with_index(tl(values))
@@ -33,6 +35,33 @@ defmodule Solver do
 
     if valid do target else 0 end
   end
+
+  def concat(x, y) do
+    :math.floor(:math.log10(y))
+    |> then(&(trunc(x * (10 ** (&1 + 1)) + y)))
+  end
+
+  def is_valid2(target, [], _operators, acc), do: target === acc
+  def is_valid2(target, [head | tail], operators, acc) do
+    Enum.any?(operators, fn op ->
+      op.(acc, head)
+      |> then(&Solver.is_valid2(target, tail, operators, &1))
+    end)
+  end
+
+  def check_validity_slow([target | values], operators) do
+    case is_valid2(target, values, operators, hd(values)) do
+      true -> target
+      _ -> 0
+    end
+  end
+
+  def check_validity([target | [ head | tail ]], operators) do
+    case is_valid2(target, tail, operators, head) do
+      true -> target
+      _ -> 0
+    end
+  end
 end
 
 calibrations = input
@@ -44,25 +73,20 @@ calibrations = input
 end)
 
 # part1
-calibrations
-|> Enum.map(fn row ->
-  Task.async(fn ->
-    Solver.is_valid(row, [&Kernel.+/2, &Kernel.*/2])
-  end)
-end)
-|> Enum.map(&Task.await(&1))
-|> Enum.sum()
-|> IO.inspect()
+# calibrations
+# |> Enum.map(fn row ->
+#   Task.async(fn ->
+#     Solver.is_valid(row, [&Kernel.+/2, &Kernel.*/2])
+#   end)
+# end)
+# |> Enum.map(&Task.await(&1))
+# |> Enum.sum()
+# |> IO.inspect()
 
 # part2
 calibrations
 |> Enum.map(fn row ->
-  Task.async(fn ->
-    Solver.is_valid(
-      row, [&Kernel.+/2, &Kernel.*/2, &Solver.concat/2]
-    )
-  end)
+  Solver.check_validity(row, [&Kernel.+/2, &Kernel.*/2, &Solver.concat/2])
 end)
-|> Enum.map(&Task.await(&1))
 |> Enum.sum()
 |> IO.inspect()
