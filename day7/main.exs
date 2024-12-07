@@ -64,14 +64,6 @@ defmodule Solver do
   end
 end
 
-calibrations = input
-|> String.split("\n", trim: true)
-|> Enum.map(&String.split(&1, " "))
-|> Enum.map(&([ String.trim(hd(&1), ":") | tl(&1) ]))
-|> Enum.map(fn row ->
-  Enum.map(row, &String.to_integer/1)
-end)
-
 # part1
 # calibrations
 # |> Enum.map(fn row ->
@@ -84,9 +76,23 @@ end)
 # |> IO.inspect()
 
 # part2
-calibrations
-|> Enum.map(fn row ->
-  Solver.check_validity(row, [&Kernel.+/2, &Kernel.*/2, &Solver.concat/2])
+{time, result} = :timer.tc(fn ->
+  calibrations = input
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.split(&1, " "))
+  |> Enum.map(&([ String.trim(hd(&1), ":") | tl(&1) ]))
+  |> Enum.map(fn row ->
+    Enum.map(row, &String.to_integer/1)
+  end)
+
+  calibrations
+  |> Enum.map(fn row ->
+    Task.async(fn ->
+      Solver.check_validity(row, [&Kernel.+/2, &Kernel.*/2, &Solver.concat/2])
+    end)
+  end)
+  |> Enum.map(&Task.await(&1))
+  |> Enum.sum()
 end)
-|> Enum.sum()
-|> IO.inspect()
+
+IO.inspect("#{result} (#{time / 1_000}ms)", label: "Part 2")
