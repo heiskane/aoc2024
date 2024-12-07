@@ -33,14 +33,16 @@ defmodule Solver do
   end
 end
 
-# part1
-input
+calibrations = input
 |> String.split("\n", trim: true)
 |> Enum.map(&String.split(&1, " "))
 |> Enum.map(&([ String.trim(hd(&1), ":") | tl(&1) ]))
 |> Enum.map(fn row ->
   Enum.map(row, &String.to_integer/1)
 end)
+
+# part1
+calibrations
 |> Enum.map(fn row ->
   case Solver.is_valid(row, [&Kernel.+/2, &Kernel.*/2]) do
     true -> hd(row)
@@ -51,13 +53,7 @@ end)
 |> IO.inspect()
 
 # part2
-input
-|> String.split("\n", trim: true)
-|> Enum.map(&String.split(&1, " "))
-|> Enum.map(&([ String.trim(hd(&1), ":") | tl(&1) ]))
-|> Enum.map(fn row ->
-  Enum.map(row, &String.to_integer/1)
-end)
+calibrations
 |> Enum.map(fn row ->
   case Solver.is_valid(row, [&Kernel.+/2, &Kernel.*/2, &(String.to_integer("#{&1}#{&2}"))]) do
     true -> hd(row)
