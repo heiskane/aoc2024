@@ -19,15 +19,17 @@ defmodule Solver do
     values = tl(row)
     operations = Combinations.generate_combinations(funcs, (length(values) - 1))
 
-    Enum.map(operations, fn ops ->
-      Enum.with_index(tl(values))
-      # TODO: reduce until one valid combination is found
+    Enum.reduce_while(operations, false, fn ops, found ->
+      result = Enum.with_index(tl(values))
       |> Enum.reduce(hd(values), fn {value, i}, acc ->
         Enum.at(ops, i)  # get operator
         |> (& &1.(acc, value)).()  # this feels naughty
       end)
+      cond do
+        result === target -> {:halt, true}
+        result !== target -> {:cont, found}
+      end
     end)
-    |> Enum.member?(target)
   end
 end
 
