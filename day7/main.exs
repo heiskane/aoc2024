@@ -9,6 +9,11 @@ defmodule Solver do
     end)
   end
 
+  def concat(x, y) do
+    :math.floor(:math.log10(y))
+    |> then(&(trunc(x * (10 ** (&1 + 1)) + y)))
+  end
+
   def is_valid(row, funcs) do
     target = hd(row)
     values = tl(row)
@@ -54,7 +59,7 @@ calibrations
 |> Enum.map(fn row ->
   Task.async(fn ->
     Solver.is_valid(
-      row, [&Kernel.+/2, &Kernel.*/2, &(String.to_integer("#{&1}#{&2}"))]
+      row, [&Kernel.+/2, &Kernel.*/2, &Solver.concat/2]
     )
   end)
 end)
