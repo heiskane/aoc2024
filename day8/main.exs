@@ -3,20 +3,19 @@
 defmodule Solver do
   def parse_antennas(grid) do
     Enum.with_index(grid)
-    |> Enum.reduce(%{}, fn {row, i}, acc1 ->
+    |> Enum.reduce(%{}, fn { row, i }, acc1 ->
       Enum.with_index(row)
-      |> Enum.reduce(acc1, fn {elem, j}, acc2 ->
+      |> Enum.reduce(acc1, fn { elem, j }, acc2 ->
         if elem !== "." do
           cords = %{ x: i, y: j}
-          Map.update(acc2, elem, [cords], fn list ->
-            [ cords | list ]
-          end)
+          Map.update(acc2, elem, [cords], &([ cords | &1 ]))
         else acc2 end
       end)
     end)
   end
 
   def find_antinodes(antennas) do
+    # part1
     Enum.flat_map(antennas, fn {_frequency, locations} ->
       # IO.inspect({frequency, locations})
       Enum.flat_map(locations, fn antenna1 ->
@@ -40,11 +39,10 @@ defmodule Solver do
     dimensions = length(grid) - 1
     IO.inspect(dimensions, label: "Dimensions")
 
-    Solver.visualize_antinodes(grid, antinodes)
+    # Solver.visualize_antinodes(grid, antinodes)
 
     Enum.reduce(antinodes, 0, fn antinode, acc ->
-      if (0 <= antinode.x && antinode.x <= dimensions)
-      && (0 <= antinode.y && antinode.y <= dimensions) do
+      if Solver.in_bounds(antinode, dimensions) do
         # IO.inspect(antinode, label: "Antinode")
         acc + 1
       else acc end
@@ -68,32 +66,36 @@ defmodule Solver do
     |> IO.puts()
   end
 
+  def in_bounds(point, dimensions) do 
+    (0 <= point.x && point.x <= dimensions) &&
+    (0 <= point.y && point.y <= dimensions)
+  end
+
   def find_valid_points(point1, point2, dimensions) do
     direction = %{ x: point1.x - point2.x, y: point1.y - point2.y }
-    divisor = Integer.gcd(direction.x, direction.y)
-    step_x = div(direction.x, divisor)
-    step_y = div(direction.y, divisor)
-    # IO.inspect({step_x, step_y})
 
-    antinodes = Stream.iterate(%{ x: point1.x + 1 * step_x, y: point1.y + 1 * step_y}, fn point ->
-      %{ x: point.x + 1 * step_x, y: point.y + 1 * step_y }
-    end)
-    |> Stream.take_while(fn point ->
-      (0 <= point.x && point.x <= dimensions) &&
-      (0 <= point.y && point.y <= dimensions)
-    end)
+    # If the input would have 2 antennas on the same horizontal/vertical
+    # row more than 1 unit apart we would have to calculate step size
+    # divisor = Integer.gcd(direction.x, direction.y)
+    # step_x = div(direction.x, divisor)
+    # step_y = div(direction.y, divisor)
+
+    Stream.iterate(point1, &(%{ x: &1.x + direction.x, y: &1.y + direction.y }))
+    # Stream.iterate(point1, &(%{ x: &1.x + step_x, y: &1.y + step_y }))
+    |> Stream.take_while(&Solver.in_bounds(&1, dimensions))
     |> Enum.to_list()
   end
 
+  @doc """
+  part2
+  """
   def find_resonant_antinodes(grid) do
-    antennas = Solver.parse_antennas(grid)
     dimensions = length(grid) - 1
 
-    antinodes = find_antinodes(antennas)
-    |> Enum.filter(&( (0 <= &1.x && &1.x <= dimensions)
-      && (0 <= &1.y && &1.y <= dimensions) ))
-
-    resonant_antinodes = Enum.flat_map(antennas, fn {_freq, locations} ->
+    # could be more efficient by only iterating over each unique
+    # combination of antennas and finding antinodes in both directions
+    Solver.parse_antennas(grid)
+    |> Enum.flat_map(fn {_freq, locations} ->
       Enum.flat_map(locations, fn antenna1 ->
         Enum.flat_map(locations, fn antenna2 ->
           if antenna1 !== antenna2 do
@@ -102,17 +104,8 @@ defmodule Solver do
         end)
       end)
     end)
-    |> Enum.filter(&(!is_nil(&1)))
     |> Enum.uniq()
-
-    all_antennas = Enum.reduce(antennas, [], fn {_freq, locations}, acc -> [ locations | acc ] end)
-    all_antinodes = List.flatten([antinodes, resonant_antinodes, all_antennas])
-    |> Enum.uniq()
-
-
-    Solver.visualize_antinodes(grid, all_antinodes)
-
-    IO.inspect(length(all_antinodes))
+    |> tap(&(Solver.visualize_antinodes(grid, &1)))
   end
 end
 
@@ -128,4 +121,5 @@ input
 |> Enum.map(&String.split(&1, "", trim: true))
 # |> tap(&(IO.inspect(&1)))
 |> Solver.find_resonant_antinodes()
-# |> IO.inspect()
+|> length()
+|> IO.inspect()
