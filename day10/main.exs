@@ -67,8 +67,6 @@ defmodule Solver do
   def part1(grid) do
     heads = Solver.find_trail_heads(grid)
 
-    # IO.inspect(heads, label: "heads")
-
     Enum.map(heads, &Solver.count_trail_tails(grid, &1))
     |> Enum.map(&Enum.uniq(&1))
     |> Enum.map(&length/1)
@@ -80,7 +78,6 @@ defmodule Solver do
 
     Enum.map(heads, &Solver.count_head_rating(grid, &1))
     |> Enum.sum()
-    # |> IO.inspect()
   end
 end
 
@@ -92,7 +89,6 @@ end
     Enum.map(row, &String.to_integer/1)
   end)
   |> Solver.part1()
-  |> IO.inspect()
 end)
 
 IO.inspect("#{result} (#{time / 1_000}ms)", label: "Part 1")
@@ -105,7 +101,6 @@ IO.inspect("#{result} (#{time / 1_000}ms)", label: "Part 1")
     Enum.map(row, &String.to_integer/1)
   end)
   |> Solver.part2()
-  |> IO.inspect()
 end)
 
 IO.inspect("#{result} (#{time / 1_000}ms)", label: "Part 2")
