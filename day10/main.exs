@@ -25,19 +25,14 @@ defmodule Solver do
   end
 
   def count_trail_tails(grid, point, score \\ nil) do
-    # IO.inspect({point, score})
-
     if !Solver.in_bounds(grid, point) do
       []
     else
       current = Enum.at(grid, point.x)
       |> Enum.at(point.y)
 
-      # IO.inspect(current, label: "current")
-
       if is_nil(score) || current - score === 1 do
-        if current === 9 do 
-          # IO.inspect(point, label: "trail tail")
+        if current === 9 do
           [ point ]
         else
           Solver.count_trail_tails(grid, Solver.apply_direction(point, %{ x: -1, y: 0 }), current) ++
@@ -49,25 +44,23 @@ defmodule Solver do
     end
   end
 
-  def count_head(grid, point, score \\ nil) do
-    # IO.inspect({point, score})
+  def count_head_rating(grid, point, score \\ nil) do
 
-    if !Solver.in_bounds(grid, point) do
-      []
+    if !Solver.in_bounds(grid, point) do 0
     else
       current = Enum.at(grid, point.x)
       |> Enum.at(point.y)
 
-      # IO.inspect(current, label: "current")
-
       if is_nil(score) || current - score === 1 do
-        if current === 9 do [ point ] else
-          Solver.count_trail_tails(grid, Solver.apply_direction(point, %{ x: -1, y: 0 }), current) ++
-          Solver.count_trail_tails(grid, Solver.apply_direction(point, %{ x: 0, y: 1 }), current) ++
-          Solver.count_trail_tails(grid, Solver.apply_direction(point, %{ x: 1, y: 0 }), current) ++
-          Solver.count_trail_tails(grid, Solver.apply_direction(point, %{ x: 0, y: -1 }), current)
+        if current === 9 do 1 else
+          [ Solver.count_head_rating(grid, Solver.apply_direction(point, %{ x: -1, y: 0 }), current),
+            Solver.count_head_rating(grid, Solver.apply_direction(point, %{ x: 0, y: 1 }), current),
+            Solver.count_head_rating(grid, Solver.apply_direction(point, %{ x: 1, y: 0 }), current),
+            Solver.count_head_rating(grid, Solver.apply_direction(point, %{ x: 0, y: -1 }), current)
+          ]
+          |> Enum.sum()
         end
-      else [] end
+      else 0 end
     end
   end
 
@@ -77,22 +70,42 @@ defmodule Solver do
     # IO.inspect(heads, label: "heads")
 
     Enum.map(heads, &Solver.count_trail_tails(grid, &1))
-    # |> tap(&IO.inspect/1)
     |> Enum.map(&Enum.uniq(&1))
     |> Enum.map(&length/1)
     |> Enum.sum()
-    |> IO.inspect()
-    # Solver.count_trail_tails(grid, %{ x: 6, y: 6 })
-    # |> Enum.uniq()
+  end
+
+  def part2(grid) do
+    heads = Solver.find_trail_heads(grid)
+
+    Enum.map(heads, &Solver.count_head_rating(grid, &1))
+    |> Enum.sum()
     # |> IO.inspect()
   end
 end
 
-input
-|> String.split("\n", trim: true)
-|> Enum.map(&String.split(&1, "", trim: true))
-|> Enum.map(fn row ->
-  Enum.map(row, &String.to_integer/1)
+{time, result} = :timer.tc(fn ->
+  input
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.split(&1, "", trim: true))
+  |> Enum.map(fn row ->
+    Enum.map(row, &String.to_integer/1)
+  end)
+  |> Solver.part1()
+  |> IO.inspect()
 end)
-|> Solver.part1()
-# |> IO.inspect()
+
+IO.inspect("#{result} (#{time / 1_000}ms)", label: "Part 1")
+
+{time, result} = :timer.tc(fn ->
+  input
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.split(&1, "", trim: true))
+  |> Enum.map(fn row ->
+    Enum.map(row, &String.to_integer/1)
+  end)
+  |> Solver.part2()
+  |> IO.inspect()
+end)
+
+IO.inspect("#{result} (#{time / 1_000}ms)", label: "Part 2")
