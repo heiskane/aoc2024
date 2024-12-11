@@ -15,7 +15,7 @@ defmodule Solver do
 
   def blink(stones) do
     Enum.reduce(stones, [], fn stone, acc ->
-      if stone === 1 do
+      if stone === 0 do
         [ 1 | acc ]
       else
         if rem(Solver.num_len(stone), 2) === 0 do
