@@ -113,7 +113,7 @@ input
   |> Enum.map(&String.to_integer/1)
   |> Enum.map(fn stone -> 
     Task.async(fn -> 
-      Solver.blink_faster(stone, 65)
+      Solver.blink_faster(stone, 75)
     end)
   end) 
   |> Task.await_many(:infinity)
