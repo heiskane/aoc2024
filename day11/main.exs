@@ -18,6 +18,34 @@ defmodule Cache do
   end
 end
 
+defmodule EtsCache do
+  use GenServer
+
+  def start_link do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  end
+
+  def init(_) do
+    :ets.new(
+      __MODULE__,
+      [:named_table, :public, :bag, write_concurrency: true]
+    )
+
+    {:ok, nil}
+  end
+
+  def insert(key, value) do
+    :ets.insert(__MODULE__, {key, value})
+  end
+
+  def fetch(key) do
+    case :ets.lookup(__MODULE__, key) do
+       [{^key, value}] -> value
+       [] -> nil
+    end
+  end
+end
+
 defmodule Solver do
   def num_len(num) when num === 0 do 1 end
   def num_len(num) do trunc(:math.floor(:math.log10(abs(num))) + 1) end
@@ -80,22 +108,22 @@ defmodule Solver do
 
   def blink_faster(stone, target, count \\ 0) do
     if count === target do 1 else
-      cached = Cache.get({stone, count})
+      cached = EtsCache.fetch({stone, count})
 
       if !is_nil(cached) do cached else
         if stone === 0 do
           result = blink_faster(1, target, count + 1)
-          Cache.put({stone, count}, result)
+          EtsCache.insert({stone, count}, result)
           result
         else
           if rem(Solver.num_len(stone), 2) === 0 do
             {left, right} = Solver.split_stone(stone)
             result = blink_faster(left, target, count + 1) + blink_faster(right, target, count + 1)
-            Cache.put({stone, count}, result)
+            EtsCache.insert({stone, count}, result)
             result
           else
             result = blink_faster(stone * 2024, target, count + 1)
-            Cache.put({stone, count}, result)
+            EtsCache.insert({stone, count}, result)
             result
           end
         end
@@ -104,18 +132,18 @@ defmodule Solver do
   end
 end
 
-Cache.start()
+EtsCache.start_link()
 
 {time, result} = :timer.tc(fn ->
 input
   |> String.trim("\n")
   |> String.split(" ")
   |> Enum.map(&String.to_integer/1)
-  |> Enum.map(fn stone -> 
-    Task.async(fn -> 
+  |> Enum.map(fn stone ->
+    Task.async(fn ->
       Solver.blink_faster(stone, 75)
     end)
-  end) 
+  end)
   |> Task.await_many(:infinity)
   |> Enum.sum()
 end)
