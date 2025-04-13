@@ -28,7 +28,7 @@ defmodule EtsCache do
   def init(_) do
     :ets.new(
       __MODULE__,
-      [:named_table, :public, :bag, write_concurrency: true]
+      [:named_table, :public, :set, write_concurrency: true]
     )
 
     {:ok, nil}
@@ -36,6 +36,7 @@ defmodule EtsCache do
 
   def insert(key, value) do
     :ets.insert(__MODULE__, {key, value})
+    value
   end
 
   def fetch(key) do
@@ -106,28 +107,33 @@ defmodule Solver do
     end
   end
 
-  def blink_faster(stone, target, count \\ 0) do
-    if count === target do 1 else
-      cached = EtsCache.fetch({stone, count})
+  def blink_faster(stone, target, count \\ 0)
+  def blink_faster(_stone, target, count) when target == count, do: 1
 
-      if !is_nil(cached) do cached else
-        if stone === 0 do
-          result = blink_faster(1, target, count + 1)
+  def blink_faster(stone, target, count) when stone === 0 do
+    case EtsCache.fetch({stone, count}) do
+       nil ->
+         result = blink_faster(1, target, count + 1)
+         EtsCache.insert({stone, count}, result)
+       cached -> cached
+    end
+  end
+
+  def blink_faster(stone, target, count) do
+    # TODO: try to refactor using `with` to see how that feels
+    case EtsCache.fetch({stone, count}) do
+      nil ->
+        if rem(Solver.num_len(stone), 2) === 0 do
+          {left, right} = Solver.split_stone(stone)
+          result = blink_faster(left, target, count + 1) + blink_faster(right, target, count + 1)
           EtsCache.insert({stone, count}, result)
-          result
         else
-          if rem(Solver.num_len(stone), 2) === 0 do
-            {left, right} = Solver.split_stone(stone)
-            result = blink_faster(left, target, count + 1) + blink_faster(right, target, count + 1)
-            EtsCache.insert({stone, count}, result)
-            result
-          else
-            result = blink_faster(stone * 2024, target, count + 1)
-            EtsCache.insert({stone, count}, result)
-            result
-          end
+          result = blink_faster(stone * 2024, target, count + 1)
+          EtsCache.insert({stone, count}, result)
         end
-      end
+
+      cached ->
+        cached
     end
   end
 end
